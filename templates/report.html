@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Роза AI-нативности</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&family=Unbounded:wght@700&display=swap">
+<style>
+:root{--paper:#EEF2F0;--surface:#F9FBFA;--ink:#14212B;--muted:#56676F;--rule:#CBD5D6;--rose:#B3246B;--rose-soft:rgba(179,36,107,.14);--depth:#2E6A86;--weak:#E3E9E8;--mid:#D6E4EA;--top:#C4D8E1;--ok:#2F7A4E;--warn:#A5660F;--bad:#B3246B}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--paper:#0E161C;--surface:#15212A;--ink:#DCE6E9;--muted:#8FA2AA;--rule:#27363F;--rose:#E3639D;--rose-soft:rgba(227,99,157,.18);--depth:#72B3D1;--weak:#18242C;--mid:#1B2C37;--top:#1F3543;--ok:#6CC08F;--warn:#E0A74F;--bad:#E3639D}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 16px 64px}
+.wrap{max-width:1120px;margin:0 auto}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+.eyebrow{font:500 12px "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.1em;color:var(--rose);text-transform:uppercase}
+h1{font:700 clamp(26px,4vw,38px)/1.15 "Unbounded","IBM Plex Sans",sans-serif;margin:8px 0 6px;text-wrap:balance}
+h2{font:700 20px/1.25 "Unbounded","IBM Plex Sans",sans-serif;margin:0 0 12px}
+header{padding:32px 0 8px}
+.meta{color:var(--muted);font-size:14px}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:32px;align-items:center;margin-top:16px}
+@media (max-width:860px){.hero{grid-template-columns:1fr}}
+.rose svg{width:100%;height:auto;display:block}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:500 11px "IBM Plex Mono",monospace;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+td.num{font:600 18px "IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.band{font:500 11px "IBM Plex Mono",monospace;padding:1px 6px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.b-weak{color:var(--bad)}.b-mid{color:var(--warn)}.b-top{color:var(--ok)}
+.conf{font-size:12px;color:var(--muted)}
+tr.weakest td{background:var(--rose-soft)}
+section{margin-top:40px}
+.callout{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--rose);padding:16px 18px;border-radius:6px}
+ol.prio{margin:8px 0 0;padding-left:22px}ol.prio li{margin:6px 0}
+details{background:var(--surface);border:1px solid var(--rule);border-radius:6px;margin:10px 0}
+summary{cursor:pointer;padding:14px 16px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary .nm{font-weight:600;font-size:16px}
+summary .sc{font:600 16px "IBM Plex Mono",monospace;margin-left:auto}
+.body{padding:0 16px 16px}
+.body p{margin:6px 0;max-width:75ch}
+.ev{font-size:13.5px}
+.ev td:first-child{width:50%}
+.src{font:12.5px "IBM Plex Mono",monospace;color:var(--muted);word-break:break-word}
+.str{font:500 11px "IBM Plex Mono",monospace;color:var(--depth)}
+.metric{margin:10px 0;padding:10px 12px;border:1px dashed var(--rule);border-radius:6px;font-size:14px}
+ul.steps{margin:6px 0;padding-left:20px}
+.q{font-size:14px}
+summary:focus-visible{outline:2px solid var(--rose);outline-offset:2px}
+footer{margin-top:48px;color:var(--muted);font-size:13px}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="empty">Нет данных: замените строку-заглушку в конце файла на JSON с оценками.</div></div>
+<script>
+const DATA = /*__SCORES_JSON__*/null;
+</script>
+<script>
+(function(){
+if(!DATA||!Array.isArray(DATA.vectors))return;
+const ORDER=["budgets","culture","ontologies","taste","automation","inclusivity"];
+const PRIO=["culture","budgets","ontologies","automation","taste","inclusivity"];
+const SHORT={budgets:"Бюджеты",culture:"Культура",ontologies:"Онтологии",taste:"Вкус",automation:"Автоматизация",inclusivity:"Инклюзивность"};
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const byId={};DATA.vectors.forEach(v=>byId[v.id]=v);
+const vs=ORDER.map(id=>byId[id]).filter(Boolean);
+const band=s=>s==null?["—",""]:s<=3?["слабая","b-weak"]:s<=6?["средняя","b-mid"]:["сильная","b-top"];
+let weakest=DATA.weakest;
+if(!weakest||!byId[weakest]){const scored=vs.filter(v=>typeof v.score==="number");const min=Math.min(...scored.map(v=>v.score));weakest=PRIO.find(id=>byId[id]&&byId[id].score===min)}
+function rose(){
+ const R=170,cx=260,cy=230,n=6,pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/n;return[cx+r*Math.cos(a),cy+r*Math.sin(a)]};
+ const hex=r=>ORDER.map((_,i)=>pt(i,r).map(x=>x.toFixed(1)).join(",")).join(" ");
+ let g=`<polygon points="${hex(R)}" fill="var(--top)"/><polygon points="${hex(R*.65)}" fill="var(--mid)"/><polygon points="${hex(R*.35)}" fill="var(--weak)"/>`;
+ [.35,.65,1].forEach(f=>g+=`<polygon points="${hex(R*f)}" fill="none" stroke="var(--rule)" stroke-width="1.2"/>`);
+ ORDER.forEach((id,i)=>{const[x,y]=pt(i,R);const w=id===weakest;g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${w?"var(--rose)":"var(--rule)"}" stroke-width="${w?3:1.2}" ${w?'stroke-dasharray="6 4"':""}/>`});
+ const pts=ORDER.map((id,i)=>{const s=byId[id]&&typeof byId[id].score==="number"?byId[id].score:0;return pt(i,Math.max(.02,s/10)*R)});
+ g+=`<polygon points="${pts.map(p=>p.map(x=>x.toFixed(1)).join(",")).join(" ")}" fill="var(--rose-soft)" stroke="var(--rose)" stroke-width="2.5" stroke-linejoin="round"/>`;
+ ORDER.forEach((id,i)=>{const[x,y]=pts[i];const w=id===weakest;g+=`<circle cx="${x}" cy="${y}" r="${w?7:4.5}" fill="${w?"var(--paper)":"var(--rose)"}" stroke="var(--rose)" stroke-width="${w?3:0}"/>`;
+  const[lx,ly]=pt(i,R+26);const anc=Math.abs(lx-cx)<5?"middle":lx>cx?"start":"end";const v=byId[id];
+  g+=`<text x="${lx}" y="${ly-2}" text-anchor="${anc}" font-family="IBM Plex Sans,system-ui,sans-serif" font-size="14" font-weight="${w?700:600}" fill="${w?"var(--rose)":"var(--ink)"}">${esc(SHORT[id])}</text><text x="${lx}" y="${ly+15}" text-anchor="${anc}" font-family="IBM Plex Mono,monospace" font-size="13" fill="var(--muted)">${v&&v.score!=null?v.score+"/10":"н/д"}${w?" · слабое звено":""}</text>`});
+ g+=`<text x="${cx+6}" y="${cy-R*.35+14}" font-family="IBM Plex Mono,monospace" font-size="10" fill="var(--muted)">слабая</text><text x="${cx+6}" y="${cy-R*.65+14}" font-family="IBM Plex Mono,monospace" font-size="10" fill="var(--muted)">средняя</text><text x="${cx+6}" y="${cy-R+14}" font-family="IBM Plex Mono,monospace" font-size="10" fill="var(--muted)">сильная</text>`;
+ return `<svg viewBox="0 0 520 470" role="img" aria-label="Роза оценок по шести векторам">${g}</svg>`;
+}
+const rows=vs.map(v=>{const[b,c]=band(v.score);return `<tr class="${v.id===weakest?"weakest":""}"><td>${esc(v.name)}</td><td class="num">${v.score==null?"—":v.score}</td><td><span class="band ${c}">${b}</span></td><td class="conf">${esc(v.confidence||"")}</td></tr>`}).join("");
+const prio=(DATA.priority||[]).map(p=>`<li><b>${esc(byId[p.id]?byId[p.id].name:p.id)}</b> — ${esc(p.why)}</li>`).join("");
+const det=vs.map(v=>{const[b,c]=band(v.score);const m=v.metric||{};
+ return `<details${v.id===weakest?" open":""}><summary><span class="nm">${esc(v.name)}</span><span class="band ${c}">${b}</span><span class="conf">уверенность: ${esc(v.confidence||"—")}</span><span class="sc">${v.score==null?"—":v.score}/10</span></summary><div class="body">
+ <p>${esc(v.summary)}</p>
+ ${m.name?`<div class="metric"><span class="str">МЕТРИКА</span> <b>${esc(m.name)}</b>: ${m.value==null?"не посчитана":esc(m.value)+" "+esc(m.unit||"")}${m.threshold?` <span class="conf">(${esc(m.threshold)})</span>`:""}<br><span class="conf">${esc(m.how||"")}</span></div>`:""}
+ ${(v.evidence||[]).length?`<table class="ev"><tr><th>Факт</th><th>Источник</th><th>Сила</th></tr>${v.evidence.map(e=>`<tr><td>${esc(e.claim)}</td><td class="src">${esc(e.source)}</td><td class="str">${esc(e.strength)}</td></tr>`).join("")}</table>`:""}
+ ${(v.next_steps||[]).length?`<p class="eyebrow" style="margin-top:14px">Следующие шаги</p><ul class="steps">${v.next_steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ul>`:""}
+ </div></details>`}).join("");
+const oq=(DATA.open_questions||[]);
+const w=byId[weakest];
+document.title="Роза AI-нативности · "+(DATA.team||"");
+document.getElementById("app").innerHTML=`
+<header><div class="eyebrow">Роза AI-нативности · ${esc(DATA.date||"")}</div><h1>${esc(DATA.team||"Команда")}</h1><div class="meta">${esc(DATA.scope||"")}${DATA.assessor?" · "+esc(DATA.assessor):""}</div></header>
+<div class="hero"><div class="rose">${rose()}</div><div><table><tr><th>Вектор</th><th>Балл</th><th>Уровень</th><th>Уверенность</th></tr>${rows}</table>
+${w?`<p class="callout" style="margin-top:16px"><b>Слабое звено: ${esc(w.name)} (${w.score}/10).</b> Остальные векторы упираются в него: чинить первым.</p>`:""}</div></div>
+<section><h2>Что закрывать первым</h2><div class="callout"><ol class="prio">${prio||"<li>Приоритеты не заданы.</li>"}</ol><p class="conf" style="margin:10px 0 0">Порядок по умолчанию: культура → бюджеты и стратегия → онтологии → автоматизация и вкус. Правило слабого звена важнее порядка.</p></div></section>
+<section><h2>Векторы: доказательства</h2>${det}</section>
+${oq.length?`<section><h2>Открытые вопросы</h2><ol class="q">${oq.map(q=>`<li><span class="str">${esc(byId[q.vector]?byId[q.vector].name:q.vector)}</span> — ${esc(q.q)}</li>`).join("")}</ol></section>`:""}
+<footer>${esc(DATA.notes||"")} Шкала: 0–3 слабая, 4–6 средняя, 7–10 сильная. Факты-артефакты весят больше самооценки. Пересчитывать раз в квартал.</footer>`;
+})();
+</script>
+</body>
+</html>

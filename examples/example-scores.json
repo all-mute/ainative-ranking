@@ -1,0 +1,104 @@
+{
+  "team": "Example Platform Team (fictional)",
+  "scope": "github.com/example-org/platform monorepo, GitHub Actions, Linear, Slack",
+  "date": "2026-09-28",
+  "assessor": "ainative-ranking skill",
+  "vectors": [
+    {
+      "id": "budgets",
+      "name": "Бюджеты и flywheel",
+      "score": 5,
+      "confidence": "medium",
+      "summary": "Internal LiteLLM gateway with per-team keys and access to many models; no evidence that measured impact ever unlocked budget.",
+      "evidence": [
+        {"claim": "LiteLLM proxy with per-team virtual keys and max_budget", "source": "infra/litellm/config.yaml", "strength": "config"},
+        {"claim": "No cost-per-PR or cost-per-ticket reporting found", "source": "grep -ri 'cost per' docs/ dashboards/", "strength": "artifact"},
+        {"claim": "Budget is set yearly per team lead", "source": "asked human", "strength": "self-report"}
+      ],
+      "metric": {"name": "Cost per merged PR", "value": null, "unit": "$", "threshold": "top: trending down and used in budget decisions", "how": "spend export not reachable from the workspace"},
+      "next_steps": ["Join gateway spend with merged-PR counts and publish cost per PR monthly", "Tie the next budget request to that trend"]
+    },
+    {
+      "id": "culture",
+      "name": "Культура",
+      "score": 3,
+      "confidence": "medium",
+      "summary": "Everyone uses agents, but sessions are never shared and PRs rarely link specs; sharing is ad hoc in Slack.",
+      "evidence": [
+        {"claim": "2 of the last 50 merged PRs link a spec or an agent session", "source": "gh pr list --state merged --limit 50 --json body", "strength": "artifact"},
+        {"claim": "No postmortem mentions an agent failure", "source": "docs/postmortems/", "strength": "artifact"},
+        {"claim": "Weekly demo exists but is optional", "source": "asked human", "strength": "self-report"}
+      ],
+      "metric": {"name": "Session-review rate (proxy: PRs linking spec/session)", "value": 4, "unit": "%", "threshold": "weak <5 · medium 5–40 · top >70", "how": "2/50 merged PRs"},
+      "next_steps": ["PR template field for spec + session link", "Share agent sessions by default in one team first"]
+    },
+    {
+      "id": "ontologies",
+      "name": "Онтологии",
+      "score": 4,
+      "confidence": "medium",
+      "summary": "MCP connectors for Linear, Notion and GitHub; calls are transcribed but transcripts are not agent-reachable; no ADRs.",
+      "evidence": [
+        {"claim": "MCP: github, linear, notion, sentry", "source": ".mcp.json", "strength": "config"},
+        {"claim": "Meeting transcripts live in a notetaker SaaS without API access for agents", "source": "asked human", "strength": "self-report"},
+        {"claim": "No decision records directory", "source": "find . -iname '*adr*' -o -iname '*decision*'", "strength": "artifact"}
+      ],
+      "metric": {"name": "Query coverage", "value": 40, "unit": "%", "threshold": "weak <30 · medium 30–70 · top >70", "how": "4/10 drafted questions answered with a source"},
+      "next_steps": ["Pipe transcripts into the agent-reachable index", "Start an ADR folder and backfill the last 10 decisions"]
+    },
+    {
+      "id": "taste",
+      "name": "Мясо и вкус",
+      "score": 5,
+      "confidence": "high",
+      "summary": "Root AGENTS.md plus 12 skills with CODEOWNERS; spec template exists; no evals for skills.",
+      "evidence": [
+        {"claim": "AGENTS.md edited 9 days ago; 12 SKILL.md files", "source": "git log -1 -- AGENTS.md; find . -name SKILL.md", "strength": "artifact"},
+        {"claim": "CODEOWNERS covers .claude/skills/", "source": ".github/CODEOWNERS", "strength": "config"},
+        {"claim": "No with/without comparisons for any skill", "source": "grep -ri eval .claude/", "strength": "artifact"}
+      ],
+      "metric": {"name": "Lesson-closure rate", "value": null, "unit": "%", "threshold": "weak <20 · medium 20–70 · top >70", "how": "no incident log to join against"},
+      "next_steps": ["Add a compound step to postmortems: every fix becomes a rule diff", "Write quality gates for >50% auto-acceptance"]
+    },
+    {
+      "id": "automation",
+      "name": "Автоматизация рутины",
+      "score": 5,
+      "confidence": "high",
+      "summary": "Merge queue with required checks and AI review; Renovate auto-merges patch bumps; agent-authored PR share is small.",
+      "evidence": [
+        {"claim": "GitHub merge queue + 7 required checks + AI reviewer", "source": ".github/workflows/, branch protection", "strength": "config"},
+        {"claim": "Renovate automerge for patch updates", "source": "renovate.json", "strength": "config"},
+        {"claim": "11 of 200 merged PRs agent-authored with no human commits", "source": "gh pr list --state merged --limit 200", "strength": "artifact"}
+      ],
+      "metric": {"name": "Agent PRs merged without human edits", "value": 5.5, "unit": "%", "threshold": "weak <5 · medium 5–30 · top >50", "how": "11/200, author is a bot or has an agent co-author trailer and no human commits"},
+      "next_steps": ["Benchmark one minion side by side before scaling", "Quarantine flaky tests automatically"]
+    },
+    {
+      "id": "inclusivity",
+      "name": "Агентская инклюзивность",
+      "score": 3,
+      "confidence": "medium",
+      "summary": "Agents run on laptops with personal tokens; one cloud agent in CI; secrets come from .env files; no agent accounts.",
+      "evidence": [
+        {"claim": ".env.example lists 14 secrets developers paste locally", "source": ".env.example", "strength": "config"},
+        {"claim": "CI agent uses a human PAT", "source": ".github/workflows/agent.yml (secrets.ALICE_PAT)", "strength": "config"},
+        {"claim": "Getting the agent into the data warehouse took ~2 days via ticket", "source": "asked human", "strength": "self-report"}
+      ],
+      "metric": {"name": "Median time-to-access", "value": 48, "unit": "h", "threshold": "weak >1h · medium minutes with approval · top <5 min, no click", "how": "single recent case, self-reported"},
+      "next_steps": ["Replace the PAT with a GitHub App", "Move secrets to a broker so agents never see raw values"]
+    }
+  ],
+  "weakest": "culture",
+  "priority": [
+    {"id": "culture", "why": "Weakest ray, tied with inclusivity and first in the default order: without shared sessions and spec links, no flywheel evidence or ontology habit can form."},
+    {"id": "inclusivity", "why": "Laptop-only agents with personal tokens cap automation regardless of CI quality."},
+    {"id": "ontologies", "why": "Transcripts and decisions outside agent reach keep automated PRs code-only."},
+    {"id": "budgets", "why": "The gateway exists; the missing piece is cost per outcome to justify growth."}
+  ],
+  "open_questions": [
+    {"vector": "budgets", "q": "Has anyone received more budget because they proved an AI investment paid off?"},
+    {"vector": "culture", "q": "When an agent last broke something: a written blameless account, or a quiet revert?"}
+  ],
+  "notes": "Fictional example for the template. Scores follow references/rubric.md anchors."
+}
