@@ -56,3 +56,7 @@ PY
 0–3 weak · 4–6 medium · 7–10 top. Artifacts outweigh self-report. Re-score quarterly, because the frontier moves.
 
 License: MIT.
+
+---
+
+Автор / Author: [t.me/nongilgamesh](https://t.me/nongilgamesh)

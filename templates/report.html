@@ -100,7 +100,7 @@ ${w?`<p class="callout" style="margin-top:16px"><b>Слабое звено: ${es
 <section><h2>Что закрывать первым</h2><div class="callout"><ol class="prio">${prio||"<li>Приоритеты не заданы.</li>"}</ol><p class="conf" style="margin:10px 0 0">Порядок по умолчанию: культура → бюджеты и стратегия → онтологии → автоматизация и вкус. Правило слабого звена важнее порядка.</p></div></section>
 <section><h2>Векторы: доказательства</h2>${det}</section>
 ${oq.length?`<section><h2>Открытые вопросы</h2><ol class="q">${oq.map(q=>`<li><span class="str">${esc(byId[q.vector]?byId[q.vector].name:q.vector)}</span> — ${esc(q.q)}</li>`).join("")}</ol></section>`:""}
-<footer>${esc(DATA.notes||"")} Шкала: 0–3 слабая, 4–6 средняя, 7–10 сильная. Факты-артефакты весят больше самооценки. Пересчитывать раз в квартал.</footer>`;
+<footer>${esc(DATA.notes||"")} Шкала: 0–3 слабая, 4–6 средняя, 7–10 сильная. Факты-артефакты весят больше самооценки. Пересчитывать раз в квартал. Автор: <a href="https://t.me/nongilgamesh" target="_blank" rel="noopener">t.me/nongilgamesh</a></footer>`;
 })();
 </script>
 </body>
